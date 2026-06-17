@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK and accept licenses
+      - name: Setup Android SDK
         run: |
           ANDROID_SDK_ROOT="$HOME/.android-sdk"
           CMDLINE_TOOLS_VERSION="14742923"
@@ -44,28 +44,31 @@ jobs:
           echo "${ANDROID_SDK_ROOT}/platform-tools" >> "${GITHUB_PATH}"
 
           SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-
           yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
           ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --install "platform-tools" "platforms;android-37.0" "build-tools;36.0.0" || true
           yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
 
-      - name: Build Third Party Debug APK
+      - name: Generate keystore for release signing
         run: |
-          chmod +x gradlew
-          ./gradlew :app:assembleThirdPartyDebug --no-daemon || true
-          ./gradlew :app:assembleThirdPartyDebug --no-daemon
+          keytool -genkey -v -keystore /tmp/release.keystore \
+            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=OpenClaw, OU=OpenClaw, O=OpenClaw, L=City, ST=State, C=CN"
 
-      - name: Build Play Debug APK
+      - name: Build Third Party Release APK
         run: |
           chmod +x gradlew
-          ./gradlew :app:assemblePlayDebug --no-daemon || true
-          ./gradlew :app:assemblePlayDebug --no-daemon
+          ./gradlew :app:assembleThirdPartyRelease \
+            -POPENCLAW_ANDROID_STORE_FILE=/tmp/release.keystore \
+            -POPENCLAW_ANDROID_STORE_PASSWORD=android \
+            -POPENCLAW_ANDROID_KEY_ALIAS=release \
+            -POPENCLAW_ANDROID_KEY_PASSWORD=android \
+            --no-daemon
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: openclaw-android-apks
           path: |
-            app/build/outputs/apk/thirdParty/debug/*.apk
-            app/build/outputs/apk/play/debug/*.apk
+            app/build/outputs/apk/thirdParty/release/*.apk
           retention-days: 30
