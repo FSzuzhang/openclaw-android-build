@@ -56,7 +56,7 @@ jobs:
           export ANDROID_SDK_ROOT="$HOME/.android-sdk"
           "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${ANDROID_SDK_ROOT}" --install \
             "platform-tools" \
-            "platforms;android-37" \
+            "platforms;android-37.0" \
             "build-tools;36.0.0" 2>&1
 
       - name: Build Third Party Debug APK
