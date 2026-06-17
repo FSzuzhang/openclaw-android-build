@@ -44,31 +44,17 @@ jobs:
           echo "${ANDROID_SDK_ROOT}/platform-tools" >> "${GITHUB_PATH}"
 
           SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-          yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
-          ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --install "platform-tools" "platforms;android-37.0" "build-tools;36.0.0" || true
-          yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
+          yes | "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
+          "${SDKMANAGER}" --sdk_root="${ANDROID_SDK_ROOT}" --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
 
-      - name: Generate keystore for release signing
-        run: |
-          keytool -genkey -v -keystore /tmp/release.keystore \
-            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
-            -dname "CN=OpenClaw, OU=OpenClaw, O=OpenClaw, L=City, ST=State, C=CN"
-
-      - name: Build Third Party Release APK
+      - name: Build ThirdParty Debug APK (Full Features!)
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleThirdPartyRelease \
-            -POPENCLAW_ANDROID_STORE_FILE=/tmp/release.keystore \
-            -POPENCLAW_ANDROID_STORE_PASSWORD=android \
-            -POPENCLAW_ANDROID_KEY_ALIAS=release \
-            -POPENCLAW_ANDROID_KEY_PASSWORD=android \
-            --no-daemon
+          ./gradlew :app:assembleThirdPartyDebug --no-daemon
 
-      - name: Upload APK artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: openclaw-android-apks
-          path: |
-            app/build/outputs/apk/thirdParty/release/*.apk
+          name: openclaw-android-apk
+          path: app/build/outputs/apk/thirdParty/debug/*.apk
           retention-days: 30
