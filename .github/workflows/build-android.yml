@@ -1,0 +1,76 @@
+﻿name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 'latest'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync Android version
+        run: pnpm android:version:sync
+
+      - name: Setup Android SDK
+        run: |
+          set -euo pipefail
+          ANDROID_SDK_ROOT="\C:\Users\Administrator/.android-sdk"
+          CMDLINE_TOOLS_VERSION="14742923"
+          ARCHIVE="commandlinetools-linux-\_latest.zip"
+          URL="https://dl.google.com/android/repository/\"
+
+          mkdir -p "\/cmdline-tools"
+          curl -fsSL "\" -o "/tmp/\"
+          rm -rf "\/cmdline-tools/latest"
+          unzip -q "/tmp/\" -d "\/cmdline-tools"
+          mv "\/cmdline-tools/cmdline-tools" "\/cmdline-tools/latest"
+
+          echo "ANDROID_SDK_ROOT=\" >> "\"
+          echo "ANDROID_HOME=\" >> "\"
+          echo "\/cmdline-tools/latest/bin" >> "\"
+          echo "\/platform-tools" >> "\"
+
+          yes | "\/cmdline-tools/latest/bin/sdkmanager" --sdk_root="\" --licenses >/dev/null
+          "\/cmdline-tools/latest/bin/sdkmanager" --sdk_root="\" --install \
+            "platform-tools" \
+            "platforms;android-37" \
+            "build-tools;36.0.0"
+
+      - name: Build Third Party Debug APK
+        working-directory: apps/android
+        run: ./gradlew :app:assembleThirdPartyDebug
+
+      - name: Build Play Debug APK
+        working-directory: apps/android
+        run: ./gradlew :app:assemblePlayDebug
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openclaw-android-apks
+          path: |
+            apps/android/app/build/outputs/apk/thirdParty/debug/*.apk
+            apps/android/app/build/outputs/apk/play/debug/*.apk
+          retention-days: 30
