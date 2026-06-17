@@ -23,8 +23,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        shell: bash
+      - name: Setup Android SDK and accept licenses
         run: |
           ANDROID_SDK_ROOT="$HOME/.android-sdk"
           CMDLINE_TOOLS_VERSION="14742923"
@@ -46,26 +45,20 @@ jobs:
 
           SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
 
-          # Accept licenses by providing "y" input and ignoring pipefail
-          set +o pipefail
-          echo "y" | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses
-          echo "y" | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses
-          echo "y" | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses
-          set -o pipefail
-
-          # Install packages
-          ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --install "platform-tools" "platforms;android-37.0" "build-tools;36.0.0"
+          yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
+          ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --install "platform-tools" "platforms;android-37.0" "build-tools;36.0.0" || true
+          yes | ${SDKMANAGER} --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
 
       - name: Build Third Party Debug APK
-        shell: bash
         run: |
           chmod +x gradlew
+          ./gradlew :app:assembleThirdPartyDebug --no-daemon || true
           ./gradlew :app:assembleThirdPartyDebug --no-daemon
 
       - name: Build Play Debug APK
-        shell: bash
         run: |
           chmod +x gradlew
+          ./gradlew :app:assemblePlayDebug --no-daemon || true
           ./gradlew :app:assemblePlayDebug --no-daemon
 
       - name: Upload APK artifacts
