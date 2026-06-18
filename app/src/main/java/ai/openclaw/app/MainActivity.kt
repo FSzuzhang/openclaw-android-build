@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
   private lateinit var permissionRequester: PermissionRequester
   private var initializedViewModel: MainViewModel? = null
   private var didAttachRuntimeUi = false
-  private var didStartNodeService = false
   private var didStartViewModelCollectors = false
   private var foreground = false
   private var pendingIntent: Intent? = null
@@ -151,10 +150,6 @@ class MainActivity : ComponentActivity() {
           // Runtime UI helpers need an Activity owner, so attach once after NodeRuntime is ready.
           readyViewModel.attachRuntimeUi(owner = this@MainActivity, permissionRequester = permissionRequester)
           didAttachRuntimeUi = true
-          if (!didStartNodeService) {
-            NodeForegroundService.start(this@MainActivity)
-            didStartNodeService = true
-          }
         }
       }
     }
