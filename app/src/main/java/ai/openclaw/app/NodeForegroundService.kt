@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -223,7 +222,6 @@ class NodeForegroundService : Service() {
 }
 
 internal fun foregroundServiceTypesForVoiceMode(mode: VoiceCaptureMode): Int {
-  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
   val base = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
   return if (mode == VoiceCaptureMode.TalkMode) {
     base or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
