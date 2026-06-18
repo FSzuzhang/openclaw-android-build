@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -28,7 +29,7 @@ class NodeForegroundService : Service() {
   override fun onCreate() {
     super.onCreate()
     ensureChannel()
-    val initial = buildNotification(title = "OpenClaw Node", text = "Starting…")
+    val initial = buildNotification(title = "OpenClaw Node", text = "Starting鈥?)
     startForegroundWithTypes(notification = initial)
 
     val runtime = (application as NodeApp).peekRuntime()
@@ -73,12 +74,12 @@ class NodeForegroundService : Service() {
           voiceCaptureMode = state.mode
           val title =
             when {
-              state.connected && state.mode == VoiceCaptureMode.TalkMode -> "OpenClaw Node · Talk"
-              state.connected -> "OpenClaw Node · Connected"
+              state.connected && state.mode == VoiceCaptureMode.TalkMode -> "OpenClaw Node 路 Talk"
+              state.connected -> "OpenClaw Node 路 Connected"
               else -> "OpenClaw Node"
             }
           val text =
-            (state.server?.let { "${state.status} · $it" } ?: state.status) +
+            (state.server?.let { "${state.status} 路 $it" } ?: state.status) +
               voiceNotificationSuffix(
                 mode = state.mode,
                 manualMicEnabled = state.capture.micEnabled,
@@ -222,6 +223,7 @@ class NodeForegroundService : Service() {
 }
 
 internal fun foregroundServiceTypesForVoiceMode(mode: VoiceCaptureMode): Int {
+  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
   val base = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
   return if (mode == VoiceCaptureMode.TalkMode) {
     base or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
@@ -240,13 +242,13 @@ internal fun voiceNotificationSuffix(
   when (mode) {
     VoiceCaptureMode.TalkMode ->
       when {
-        talkSpeaking -> " · Talk: Speaking"
-        talkListening -> " · Talk: Listening"
-        else -> " · Talk: On"
+        talkSpeaking -> " 路 Talk: Speaking"
+        talkListening -> " 路 Talk: Listening"
+        else -> " 路 Talk: On"
       }
     VoiceCaptureMode.ManualMic ->
       if (manualMicEnabled) {
-        if (manualMicListening) " · Mic: Listening" else " · Mic: Pending"
+        if (manualMicListening) " 路 Mic: Listening" else " 路 Mic: Pending"
       } else {
         ""
       }
